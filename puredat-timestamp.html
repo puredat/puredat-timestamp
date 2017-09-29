@@ -23,21 +23,22 @@
         style="padding: 5px"
         id="input"
         label="[[label]]"
-        pattern="[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{3})*"
-        allowed-pattern="[0-9-:\. ]"
+        pattern="[[pattern]]"
+        allowed-pattern="[[allowedPattern]]"
         prevent-invalid-input
-        error-message="{{formState.errorMessage}}"
+        error-message="{{errorMessage}}"
         invalid$="[[hasErrors]]"
         value="{{value}}"
         disabled$="[[disabled]]"
         auto-validate
         always-float-label
         type="string"
-        minlength="19"
-        maxlength="23"
+        minlength="[[minlength]]"
+        maxlength="[[maxlength]]"
         placeholder="[[placeholder]]"
         required$="[[required]]"
-        readonly$="[[readonly]]">
+        readonly$="[[readonly]]"
+        date-format$="[[dateFormat]]">
       <paper-icon-button suffix icon="event" on-click="calendarClickHandler"></paper-icon-button>
     </paper-input>
 
@@ -64,14 +65,10 @@
       is: "puredat-timestamp",
 
       properties: {
-        prop1: {
-          type: String,
-          value: 'puredat-timestamp',
-        },
-
         value: {
           type: String,
           notify: true,
+          observer: '_valueChanged'
         },
 
         label: {
@@ -89,6 +86,8 @@
 
         required: Boolean,
 
+        hasErrors: Boolean,
+
         placeholder: String,
 
         readonly: {
@@ -96,6 +95,31 @@
           reflectToAttribute: true,
           value: false,
         },
+
+        minlength: {
+          type: Number,
+          value: 19
+        },
+
+        maxlength: {
+          type: Number,
+          value: 23
+        },
+
+        allowedPattern: {
+          type: String,
+          value: "[0-9-:\. ]"
+        },
+
+        pattern: {
+          type: String,
+          value: "^$|[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{3})*"
+        },
+
+        dateFormat: {
+          type: String,
+          value: "YYYY-MM-DD"
+        }
       },
 
       calendarClickHandler: function(event) {
@@ -130,9 +154,17 @@
             hour = "0" + hour;
           if (minutes < 10)
             minutes = "0" + minutes;
-          this.set("value", this.$.datePicker.dateFormat(this.$.datePicker.date, "YYYY-MM-DD") + " " + hour + ":" + minutes + ":00");
+          this.set("value", this.$.datePicker.dateFormat(this.$.datePicker.date, this.dateFormat) + " " + hour + ":" + minutes + ":00");
         }
+      },
+
+      _valueChanged: function(value){
+        // Check valid
+        var reg = new RegExp(this.pattern, 'g');
+        this.hasErrors = !reg.test(value);
       }
+
+
     });
   </script>
 </dom-module>
