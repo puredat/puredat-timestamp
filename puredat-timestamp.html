@@ -160,8 +160,10 @@
 
       _valueChanged: function(value){
         // Check valid
-        var reg = new RegExp(this.pattern, 'g');
-        this.hasErrors = !reg.test(value);
+        if(value != null){
+          var reg = new RegExp(this.pattern, 'g');
+          this.hasErrors = !reg.test(value);
+        }
       }
 
 
