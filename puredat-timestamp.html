@@ -103,17 +103,17 @@
 
         maxlength: {
           type: Number,
-          value: 23
+          value: 26
         },
 
         allowedPattern: {
           type: String,
-          value: "[0-9-:\. ]"
+          value: "[0-9-:\. \+]"
         },
 
         pattern: {
           type: String,
-          value: "^$|[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{3})*"
+          value: "^$|[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{3})(\\+[0-9]{2})*"
         },
 
         dateFormat: {
@@ -154,7 +154,21 @@
             hour = "0" + hour;
           if (minutes < 10)
             minutes = "0" + minutes;
-          this.set("value", this.$.datePicker.dateFormat(this.$.datePicker.date, this.dateFormat) + " " + hour + ":" + minutes + ":00");
+
+          var newValue = this.$.datePicker.dateFormat(this.$.datePicker.date, this.dateFormat) + " " + hour + ":" + minutes + ":00";
+
+          var offset;
+          try{
+            offset = this.value.substring(newValue.length);
+          }catch(e){}
+          
+          var time = "000";
+          var zone = -(new Date().getTimezoneOffset() / 60);
+          zone = zone < 10 ? "0" + zone : zone;
+
+          offset = offset ? offset : "." + time + "+" + zone;
+
+          this.set("value", newValue + offset);
         }
       },
 
