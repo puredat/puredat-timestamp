@@ -8,27 +8,131 @@
 -->
 
 <dom-module id="puredat-timestamp">
+
   <template>
     <style>
-      :host {
-        display: block;
+      :host[readonly] paper-icon-button{
+        display: none;
+      }
+      .buttons{
+        background-color: white;
       }
     </style>
-    <h2>TO-DO [[prop1]]</h2>
+
+    <paper-input
+        style="padding: 5px"
+        id="input"
+        label="[[label]]"
+        pattern="[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{3})*"
+        allowed-pattern="[0-9-:\. ]"
+        prevent-invalid-input
+        error-message="{{formState.errorMessage}}"
+        invalid$="[[hasErrors]]"
+        value="{{value}}"
+        disabled$="[[disabled]]"
+        auto-validate
+        always-float-label
+        type="string"
+        minlength="19"
+        maxlength="23"
+        placeholder="[[placeholder]]"
+        required$="[[required]]"
+        readonly$="[[readonly]]">
+      <paper-icon-button suffix icon="event" on-click="calendarClickHandler"></paper-icon-button>
+    </paper-input>
+
+    <paper-dialog id="dialog" on-iron-overlay-closed="closeDialogHandler">
+      <paper-date-picker
+          style="margin: 0; padding: 0"
+          id="datePicker"
+          locale="[[locale]]"
+          responsive-width="655px">
+      </paper-date-picker>
+      <paper-time-picker
+          style="margin: 0; padding: 0"
+          id="timePicker">
+      </paper-time-picker>
+      <div class="buttons">
+        <paper-button dialog-dismiss>Cancel</paper-button>
+        <paper-button dialog-confirm>OK</paper-button>
+      </div>
+    </paper-dialog>
   </template>
 
   <script>
-    Polymer({
-
-      is: 'puredat-timestamp',
+    TimestampElement = Polymer({
+      is: "puredat-timestamp",
 
       properties: {
         prop1: {
           type: String,
           value: 'puredat-timestamp',
         },
+
+        value: {
+          type: String,
+          notify: true,
+        },
+
+        label: {
+          type: String
+        },
+
+        locale: {
+          type: String,
+          value: "es"
+        },
+
+        errorMessage: String,
+
+        disabled: Boolean,
+
+        required: Boolean,
+
+        placeholder: String,
+
+        readonly: {
+          type: Boolean,
+          reflectToAttribute: true,
+          value: false,
+        },
       },
 
+      calendarClickHandler: function(event) {
+        if (this.value != null && this.value != "") {
+          var reg = /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).*/;
+          var dateArray = reg.exec(this.value);
+          if (dateArray.length >= 4) {
+            var dateObject = new Date(+dateArray[1], +dateArray[2] - 1, +dateArray[3]);
+            this.$.datePicker.date = dateObject;
+          }
+        }
+
+        if (this.readonly != null && !this.readonly) {
+          this.$.dialog.toggle();
+        }
+      },
+
+      closeDialogHandler: function(event) {
+        if (event.detail.confirmed) {
+          if (this.$.datePicker.date == null)
+            this.$.datePicker.date = new Date();
+
+          if (this.$.timePicker.hour == null)
+            this.$.timePicker.hour = 0;
+          if (this.$.timePicker.minute == null)
+            this.$.timePicker.minute = 0;
+
+          var hour = this.$.timePicker.hour;
+          var minutes = this.$.timePicker.minute;
+
+          if (hour < 10)
+            hour = "0" + hour;
+          if (minutes < 10)
+            minutes = "0" + minutes;
+          this.set("value", this.$.datePicker.dateFormat(this.$.datePicker.date, "YYYY-MM-DD") + " " + hour + ":" + minutes + ":00");
+        }
+      }
     });
   </script>
 </dom-module>
