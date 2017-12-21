@@ -8,26 +8,178 @@
 -->
 
 <dom-module id="puredat-timestamp">
+
   <template>
     <style>
-      :host {
-        display: block;
+      :host[readonly] paper-icon-button{
+        display: none;
+      }
+      .buttons{
+        background-color: white;
       }
     </style>
-    <h2>TO-DO [[prop1]]</h2>
+
+    <paper-input
+        style="padding: 5px"
+        id="input"
+        label="[[label]]"
+        pattern="[[pattern]]"
+        allowed-pattern="[[allowedPattern]]"
+        prevent-invalid-input
+        error-message="{{errorMessage}}"
+        invalid$="[[hasErrors]]"
+        value="{{value}}"
+        disabled$="[[disabled]]"
+        auto-validate
+        always-float-label
+        type="string"
+        minlength="[[minlength]]"
+        maxlength="[[maxlength]]"
+        placeholder="[[placeholder]]"
+        required$="[[required]]"
+        readonly$="[[readonly]]"
+        date-format$="[[dateFormat]]">
+      <paper-icon-button suffix icon="event" on-click="calendarClickHandler"></paper-icon-button>
+    </paper-input>
+
+    <paper-dialog id="dialog" on-iron-overlay-closed="closeDialogHandler">
+      <paper-date-picker
+          style="margin: 0; padding: 0"
+          id="datePicker"
+          locale="[[locale]]"
+          responsive-width="655px">
+      </paper-date-picker>
+      <paper-time-picker
+          style="margin: 0; padding: 0"
+          id="timePicker">
+      </paper-time-picker>
+      <div class="buttons">
+        <paper-button dialog-dismiss>Cancel</paper-button>
+        <paper-button dialog-confirm>OK</paper-button>
+      </div>
+    </paper-dialog>
   </template>
 
   <script>
-    Polymer({
-
-      is: 'puredat-timestamp',
+    TimestampElement = Polymer({
+      is: "puredat-timestamp",
 
       properties: {
-        prop1: {
+        value: {
           type: String,
-          value: 'puredat-timestamp',
+          notify: true,
+          observer: '_valueChanged'
         },
+
+        label: {
+          type: String
+        },
+
+        locale: {
+          type: String,
+          value: "es"
+        },
+
+        errorMessage: String,
+
+        disabled: Boolean,
+
+        required: Boolean,
+
+        hasErrors: Boolean,
+
+        placeholder: String,
+
+        readonly: {
+          type: Boolean,
+          reflectToAttribute: true,
+          value: false,
+        },
+
+        minlength: {
+          type: Number,
+          value: 19
+        },
+
+        maxlength: {
+          type: Number,
+          value: 26
+        },
+
+        allowedPattern: {
+          type: String,
+          value: "[0-9-:\. \+]"
+        },
+
+        pattern: {
+          type: String,
+          value: "^$|[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{3})(\\+[0-9]{2})*"
+        },
+
+        dateFormat: {
+          type: String,
+          value: "YYYY-MM-DD"
+        }
       },
+
+      calendarClickHandler: function(event) {
+        if (this.value != null && this.value != "") {
+          var reg = /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).*/;
+          var dateArray = reg.exec(this.value);
+          if (dateArray.length >= 4) {
+            var dateObject = new Date(+dateArray[1], +dateArray[2] - 1, +dateArray[3]);
+            this.$.datePicker.date = dateObject;
+          }
+        }
+
+        if (this.readonly != null && !this.readonly) {
+          this.$.dialog.toggle();
+        }
+      },
+
+      closeDialogHandler: function(event) {
+        if (event.detail.confirmed) {
+          if (this.$.datePicker.date == null)
+            this.$.datePicker.date = new Date();
+
+          if (this.$.timePicker.hour == null)
+            this.$.timePicker.hour = 0;
+          if (this.$.timePicker.minute == null)
+            this.$.timePicker.minute = 0;
+
+          var hour = this.$.timePicker.hour;
+          var minutes = this.$.timePicker.minute;
+
+          if (hour < 10)
+            hour = "0" + hour;
+          if (minutes < 10)
+            minutes = "0" + minutes;
+
+          var newValue = this.$.datePicker.dateFormat(this.$.datePicker.date, this.dateFormat) + " " + hour + ":" + minutes + ":00";
+
+          var offset;
+          try{
+            offset = this.value.substring(newValue.length);
+          }catch(e){}
+          
+          var time = "000";
+          var zone = -(new Date().getTimezoneOffset() / 60);
+          zone = zone < 10 ? "0" + zone : zone;
+
+          offset = offset ? offset : "." + time + "+" + zone;
+
+          this.set("value", newValue + offset);
+        }
+      },
+
+      _valueChanged: function(value){
+        // Check valid
+        if(value != null){
+          var reg = new RegExp(this.pattern, 'g');
+          this.hasErrors = !reg.test(value);
+        }
+      }
+
 
     });
   </script>
