@@ -2,7 +2,8 @@
   "name": "puredat-timestamp",
   "main": "puredat-timestamp.html",
   "dependencies": {
-    "polymer": "Polymer/polymer#^1.4.0"
+    "polymer": "Polymer/polymer#^1.4.0",
+    "moment": "^2.20.1"
   },
   "devDependencies": {
     "paper-date-picker": "bendavis78/paper-date-picker",
