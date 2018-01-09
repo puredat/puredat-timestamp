@@ -27,11 +27,9 @@
         pattern="[[pattern]]"
         allowed-pattern="[[allowedPattern]]"
         value="{{displayValue}}"
-        prevent-invalid-input
         error-message="{{errorMessage}}"
         invalid$="[[hasErrors]]"
         disabled$="[[disabled]]"
-        auto-validate
         always-float-label
         type="string"
         minlength="[[minlength]]"
@@ -147,18 +145,16 @@
 
       calendarClickHandler: function(event) {
         var reg = /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).*/;
-        var currentTimezone = moment(new Date()).utcOffset();
 
         if (this.value != null && this.value != "") {
           var dateArray = reg.exec(this.value);
           if (dateArray.length >= 4) {
-            var dateObject = new Date(+dateArray[1], +dateArray[2] - 1, +dateArray[3], dateArray[4], dateArray[5], 0, 0);
-            this.$.datePicker.date = moment(dateObject).utcOffset(-currentTimezone).utcOffset(this.displayTimezone).toDate();
+            this.$.datePicker.date = new Date(moment(this.value,this.storeDateFormat).utc().utcOffset(this.displayTimezone).format("YYYY-MM-DD HH:mm:ss"));
             this.$.timePicker.hour = moment(this.$.datePicker.date).format("HH");
             this.$.timePicker.minute = moment(this.$.datePicker.date).format("mm");
           }
         }else{
-          this.$.datePicker.date = moment(new Date()).utcOffset(-currentTimezone).utcOffset(this.displayTimezone).toDate();
+          this.$.datePicker.date = new Date(moment(new Date()).utc().utcOffset(this.displayTimezone).format("YYYY-MM-DD HH:mm:ss"));
           this.$.timePicker.hour = moment(this.$.datePicker.date).format("HH");
           this.$.timePicker.minute = moment(this.$.datePicker.date).format("mm");
         }
@@ -170,8 +166,6 @@
 
       closeDialogHandler: function(event) {
         if (event.detail.confirmed) {
-          var currentTimezone = moment(new Date()).utcOffset();
-
           if (this.$.datePicker.date == null)
             this.$.datePicker.date = new Date();
 
@@ -180,11 +174,11 @@
           if (this.$.timePicker.minute == null)
             this.$.timePicker.minute = moment(this.$.datePicker.date).format("mm");
 
-          var tmpDate = new Date(moment(this.$.datePicker.date).format("YYYY"),moment(this.$.datePicker.date).format("MM"),moment(this.$.datePicker.date).format("DD"),this.$.timePicker.hour,this.$.timePicker.minute,moment(this.$.datePicker.date).format("ss"),moment(this.$.datePicker.date).format("SSS"));
+          var tmpDate = moment(moment(this.$.datePicker.date).format("YYYY-MM-DD") + " " + this.$.timePicker.hour + ":" + this.$.timePicker.minute + ":00.000" + this.displayTimezone.substring(0,3),"YYYY-MM-DD HH:mm:ss.SSSZZ");
 
-          var displayDate = moment(tmpDate).utcOffset(-currentTimezone).utcOffset(this.displayTimezone).format(this.displayDateFormat);
+          var displayDate = tmpDate.utc().utcOffset(this.displayTimezone).format(this.displayDateFormat);
 
-          var storeDate = moment(tmpDate).utcOffset(-currentTimezone).utcOffset(this.storeTimezone).format(this.storeDateFormat);
+          var storeDate = tmpDate.utc().utcOffset(this.storeTimezone).format(this.storeDateFormat);
 
           this.set("value", storeDate.length > this.maxlength ? storeDate.substring(0,this.maxlength) : storeDate);
           this.set("displayValue", displayDate.length > this.maxlength ? displayDate.substring(0,this.maxlength) : displayDate);
@@ -197,8 +191,7 @@
           var reg = new RegExp(this.pattern, 'g');
           this.hasErrors = !reg.test(value);
 
-          var currentTimezone = moment(new Date()).utcOffset();
-          var dateToDisplay = moment(value,this.storeDateFormat).utcOffset(-currentTimezone).utcOffset(this.displayTimezone).format(this.displayDateFormat);
+          var dateToDisplay = moment(value,this.storeDateFormat).utc().utcOffset(this.displayTimezone).format(this.displayDateFormat);
           this.set("displayValue", dateToDisplay.length > this.maxlength ? dateToDisplay.substring(0,this.maxlength) : dateToDisplay);
         }
       }
