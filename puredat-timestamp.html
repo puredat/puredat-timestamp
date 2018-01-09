@@ -181,7 +181,7 @@
 
           var storeDate = moment(tmpDate).utcOffset(-currentTimezone).utcOffset(this.storeTimezone).format(this.storeDateFormat);
 
-          this.set("value", storeDate);
+          this.set("value", storeDate.length > this.maxlength ? storeDate.substring(0,this.maxlength) : storeDate);
           this.set("displayValue", displayDate);
         }
       },
