@@ -146,16 +146,21 @@
       },
 
       calendarClickHandler: function(event) {
+        var reg = /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).*/;
+        var currentTimezone = moment(new Date()).utcOffset();
+
         if (this.value != null && this.value != "") {
-          var reg = /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).*/;
           var dateArray = reg.exec(this.value);
           if (dateArray.length >= 4) {
-            var currentTimezone = moment(new Date()).utcOffset();
             var dateObject = new Date(+dateArray[1], +dateArray[2] - 1, +dateArray[3], dateArray[4], dateArray[5], 0, 0);
             this.$.datePicker.date = moment(dateObject).utcOffset(-currentTimezone).utcOffset(this.displayTimezone).toDate();
             this.$.timePicker.hour = moment(this.$.datePicker.date).format("HH");
             this.$.timePicker.minute = moment(this.$.datePicker.date).format("mm");
           }
+        }else{
+          this.$.datePicker.date = moment(new Date()).utcOffset(-currentTimezone).utcOffset(this.displayTimezone).toDate();
+          this.$.timePicker.hour = moment(this.$.datePicker.date).format("HH");
+          this.$.timePicker.minute = moment(this.$.datePicker.date).format("mm");
         }
 
         if (this.readonly != null && !this.readonly) {
@@ -182,7 +187,7 @@
           var storeDate = moment(tmpDate).utcOffset(-currentTimezone).utcOffset(this.storeTimezone).format(this.storeDateFormat);
 
           this.set("value", storeDate.length > this.maxlength ? storeDate.substring(0,this.maxlength) : storeDate);
-          this.set("displayValue", displayDate);
+          this.set("displayValue", displayDate.length > this.maxlength ? displayDate.substring(0,this.maxlength) : displayDate);
         }
       },
 
@@ -193,7 +198,8 @@
           this.hasErrors = !reg.test(value);
 
           var currentTimezone = moment(new Date()).utcOffset();
-          this.set("displayValue", moment(value,this.storeDateFormat).utcOffset(-currentTimezone).utcOffset(this.displayTimezone).format(this.displayDateFormat));
+          var dateToDisplay = moment(value,this.storeDateFormat).utcOffset(-currentTimezone).utcOffset(this.displayTimezone).format(this.displayDateFormat);
+          this.set("displayValue", dateToDisplay.length > this.maxlength ? dateToDisplay.substring(0,this.maxlength) : dateToDisplay);
         }
       }
 
