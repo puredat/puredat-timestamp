@@ -5,7 +5,7 @@
 `puredat-timestamp`
 
 
-@demo demo/index.html 
+@demo demo/index.html
 -->
 
 <dom-module id="puredat-timestamp">
@@ -129,7 +129,9 @@
 
         displayDateFormat: {
           type: String,
-          value: "DD/MM/YYYY HH:mm:ss.SSSZZ"
+          value: "DD/MM/YYYY HH:mm:ss.SSSZZ",
+          observer: '_displayDateFormatChanged'
+
         },
 
         storeTimezone: {
@@ -139,7 +141,8 @@
 
         displayTimezone: {
           type: String,
-          value: "+01:00"
+          value: "+01:00",
+          observer: '_displayTimezoneChanged'
         }
       },
 
@@ -194,6 +197,25 @@
           var dateToDisplay = moment(value,this.storeDateFormat).utc().utcOffset(this.displayTimezone).format(this.displayDateFormat);
           this.set("displayValue", dateToDisplay.length > this.maxlength ? dateToDisplay.substring(0,this.maxlength) : dateToDisplay);
         }
+      },
+
+      _displayDateFormatChanged: function(newDisplayDateFormar) {
+      	if(newDisplayDateFormar != null && this.value != null) {
+          var dateToDisplay = moment(this.value,this.storeDateFormat).utc().utcOffset(this.displayTimezone).format(this.displayDateFormat);
+          this.set("displayValue", dateToDisplay.length > this.maxlength ? dateToDisplay.substring(0,this.maxlength) : dateToDisplay);
+      	} else {
+      		this.set("displayValue","");
+      	}
+
+      },
+
+      _displayTimezoneChanged: function(newDisplayTimeZone) {
+      	if(newDisplayTimeZone != null && this.value != null) {
+          var dateToDisplay = moment(this.value,this.storeDateFormat).utc().utcOffset(this.displayTimezone).format(this.displayDateFormat);
+          this.set("displayValue", dateToDisplay.length > this.maxlength ? dateToDisplay.substring(0,this.maxlength) : dateToDisplay);
+      	} else {
+      		this.set("displayValue","");
+      	}
       }
 
 
