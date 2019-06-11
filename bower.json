@@ -6,8 +6,8 @@
     "moment": "^2.20.1"
   },
   "devDependencies": {
-    "paper-date-picker": "bendavis78/paper-date-picker",
-    "paper-time-picker": "https://github.com/bendavis78/paper-time-picker.git",
+    "paper-date-picker": "bendavis78/paper-date-picker#~1.2.2",
+    "paper-time-picker": "bendavis78/paper-time-picker#~1.1.5",
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^1.0.0",
     "web-component-tester": "^4.0.0",

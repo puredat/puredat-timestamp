@@ -187,12 +187,15 @@
 
       _valueChanged: function(value){
         // Check valid
-        if(value != null){
+        if(value){
           var reg = new RegExp(this.pattern, 'g');
           this.hasErrors = !reg.test(value);
 
           var dateToDisplay = moment(value,this.storeDateFormat).utc().utcOffset(this.displayTimezone).format(this.displayDateFormat);
           this.set("displayValue", dateToDisplay.length > this.maxlength ? dateToDisplay.substring(0,this.maxlength) : dateToDisplay);
+        }else{
+          this.hasErrors = false;
+          this.set("displayValue","");
         }
       }
 
