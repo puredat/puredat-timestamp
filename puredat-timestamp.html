@@ -1,4 +1,5 @@
 <link rel="import" href="../polymer/polymer.html">
+<script src="../moment/moment.js"></script>
 
 <!--
 `puredat-timestamp`
@@ -25,12 +26,10 @@
         label="[[label]]"
         pattern="[[pattern]]"
         allowed-pattern="[[allowedPattern]]"
-        prevent-invalid-input
+        value="{{displayValue}}"
         error-message="{{errorMessage}}"
         invalid$="[[hasErrors]]"
-        value="{{value}}"
         disabled$="[[disabled]]"
-        auto-validate
         always-float-label
         type="string"
         minlength="[[minlength]]"
@@ -38,7 +37,10 @@
         placeholder="[[placeholder]]"
         required$="[[required]]"
         readonly$="[[readonly]]"
-        date-format$="[[dateFormat]]">
+        store-date-format="[[storeDateFormat]]"
+        display-date-format="[[displayDateFormat]]"
+        store-timezone="[[storeTimezone]]"
+        display-timezone="[[displayTimezone]]">
       <paper-icon-button suffix icon="event" on-click="calendarClickHandler"></paper-icon-button>
     </paper-input>
 
@@ -69,6 +71,10 @@
           type: String,
           notify: true,
           observer: '_valueChanged'
+        },
+
+        displayValue: {
+          type: String
         },
 
         label: {
@@ -116,20 +122,41 @@
           value: "^$|[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{3})(\\+[0-9]{2})*"
         },
 
-        dateFormat: {
+        storeDateFormat: {
           type: String,
-          value: "YYYY-MM-DD"
+          value: "YYYY-MM-DD HH:mm:ss.SSSZZ"
+        },
+
+        displayDateFormat: {
+          type: String,
+          value: "DD/MM/YYYY HH:mm:ss.SSSZZ"
+        },
+
+        storeTimezone: {
+          type: String,
+          value: "+00:00"
+        },
+
+        displayTimezone: {
+          type: String,
+          value: "+01:00"
         }
       },
 
       calendarClickHandler: function(event) {
+        var reg = /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).*/;
+
         if (this.value != null && this.value != "") {
-          var reg = /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}).*/;
           var dateArray = reg.exec(this.value);
           if (dateArray.length >= 4) {
-            var dateObject = new Date(+dateArray[1], +dateArray[2] - 1, +dateArray[3]);
-            this.$.datePicker.date = dateObject;
+            this.$.datePicker.date = new Date(moment(this.value,this.storeDateFormat).utc().utcOffset(this.displayTimezone).format("YYYY-MM-DD HH:mm:ss"));
+            this.$.timePicker.hour = moment(this.$.datePicker.date).format("HH");
+            this.$.timePicker.minute = moment(this.$.datePicker.date).format("mm");
           }
+        }else{
+          this.$.datePicker.date = new Date(moment(new Date()).utc().utcOffset(this.displayTimezone).format("YYYY-MM-DD HH:mm:ss"));
+          this.$.timePicker.hour = moment(this.$.datePicker.date).format("HH");
+          this.$.timePicker.minute = moment(this.$.datePicker.date).format("mm");
         }
 
         if (this.readonly != null && !this.readonly) {
@@ -143,32 +170,18 @@
             this.$.datePicker.date = new Date();
 
           if (this.$.timePicker.hour == null)
-            this.$.timePicker.hour = 0;
+            this.$.timePicker.hour = moment(this.$.datePicker.date).format("HH");
           if (this.$.timePicker.minute == null)
-            this.$.timePicker.minute = 0;
+            this.$.timePicker.minute = moment(this.$.datePicker.date).format("mm");
 
-          var hour = this.$.timePicker.hour;
-          var minutes = this.$.timePicker.minute;
+          var tmpDate = moment(moment(this.$.datePicker.date).format("YYYY-MM-DD") + " " + this.$.timePicker.hour + ":" + this.$.timePicker.minute + ":00.000" + this.displayTimezone.substring(0,3),"YYYY-MM-DD HH:mm:ss.SSSZZ");
 
-          if (hour < 10)
-            hour = "0" + hour;
-          if (minutes < 10)
-            minutes = "0" + minutes;
+          var displayDate = tmpDate.utc().utcOffset(this.displayTimezone).format(this.displayDateFormat);
 
-          var newValue = this.$.datePicker.dateFormat(this.$.datePicker.date, this.dateFormat) + " " + hour + ":" + minutes + ":00";
+          var storeDate = tmpDate.utc().utcOffset(this.storeTimezone).format(this.storeDateFormat);
 
-          var offset;
-          try{
-            offset = this.value.substring(newValue.length);
-          }catch(e){}
-          
-          var time = "000";
-          var zone = -(new Date().getTimezoneOffset() / 60);
-          zone = zone < 10 ? "0" + zone : zone;
-
-          offset = offset ? offset : "." + time + "+" + zone;
-
-          this.set("value", newValue + offset);
+          this.set("value", storeDate.length > this.maxlength ? storeDate.substring(0,this.maxlength) : storeDate);
+          this.set("displayValue", displayDate.length > this.maxlength ? displayDate.substring(0,this.maxlength) : displayDate);
         }
       },
 
@@ -177,6 +190,9 @@
         if(value != null){
           var reg = new RegExp(this.pattern, 'g');
           this.hasErrors = !reg.test(value);
+
+          var dateToDisplay = moment(value,this.storeDateFormat).utc().utcOffset(this.displayTimezone).format(this.displayDateFormat);
+          this.set("displayValue", dateToDisplay.length > this.maxlength ? dateToDisplay.substring(0,this.maxlength) : dateToDisplay);
         }
       }
 
